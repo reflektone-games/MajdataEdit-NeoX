@@ -618,7 +618,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         if (Maidata is null) return;
         if (!await _player.ConnectAsync()) return;
 
-        if (_timelineClock.IsRunning)
+        if (!_timelineClock.IsRunning)
             await PlayAsync(false, false);
         else
             await PauseAsync();
