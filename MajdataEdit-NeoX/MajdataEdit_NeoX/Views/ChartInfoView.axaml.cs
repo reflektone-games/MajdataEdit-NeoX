@@ -1,14 +1,9 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
-using Avalonia.Markup.Xaml;
 using Avalonia.Media.Imaging;
-using Avalonia.Platform;
 using CommunityToolkit.Mvvm.Input;
 using MajdataEdit_NeoX.Models.Fumen;
 using PropertyGenerator.Avalonia;
-using System;
-using System.IO;
 
 namespace MajdataEdit_NeoX.Views
 {

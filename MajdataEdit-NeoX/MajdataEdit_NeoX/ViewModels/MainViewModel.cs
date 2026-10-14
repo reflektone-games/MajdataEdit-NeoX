@@ -2,58 +2,58 @@ using Cimai;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Controls;
-using Dock.Model.Core;
-using Dock.Model.Mvvm;
-using Dock.Model.Mvvm.Controls;
 using MajdataEdit_NeoX.Models.Fumen;
 using MajdataEdit_NeoX.Models.Connection;
-using MajdataEdit_NeoX.Models.Setting;
 using MajdataEdit_NeoX.Models.Track;
 using MajdataEdit_NeoX.Services;
-using MajdataEdit_NeoX.Base;
-using MajdataEdit_NeoX.Views;
 using MajdataEdit_NeoX.Lang;
 using Avalonia.PropertyGrid.Services;
 using Avalonia.Threading;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MajProtocol.Types.Enums;
 using MajdataEdit_NeoX.Input;
 using Avalonia.Media.Imaging;
+using MajProtocol.Standard.Packets;
 
 namespace MajdataEdit_NeoX.ViewModels;
 
-public enum AboutPages { Discord, QQ, GitHub, GitHub_ViewX, MajNet }
+public enum AboutPages
+{
+    Discord,
+    QQ,
+    GitHub,
+    GitHub_ViewX,
+    MajNet
+}
+
 public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 {
     // Design
-    public MainViewModel() : this(new AvaloniaFileDialogService(() => null)) { }
+    public MainViewModel() : this(new AvaloniaFileDialogService(() => null))
+    {
+    }
 
     private readonly IFileDialogService _fileDialog;
+
     public MainViewModel(IFileDialogService fileDialog)
     {
         _fileDialog = fileDialog;
-        Instance = this;
-        _player = new PlayerConnection(Settings.Current.EditSetting.PlayerIps);
+        Instance    = this;
+        _player     = new PlayerConnection(Settings.Current.EditSetting.PlayerIps);
 
         Factory = new MainDockFactory(this);
-        Layout = Factory.CreateLayout()!;
-        Factory.InitLayout(Layout!);
+        Layout  = Factory.CreateLayout();
+        Factory.InitLayout(Layout);
 
         Settings.SettingsChanged += OnSettingsChanged;
 
-        _player.OnViewStateChanged += OnPlayerStateChanged;
         _player.OnConnectedChanged += connected =>
         {
             _pushedSetting = false;
-            _chartDirty = true;
+            _chartDirty    = true;
             OnPropertyChanged(nameof(IsConnected));
             OnPropertyChanged(nameof(ActiveConnectionCount));
             _ = SynchronizeConnectedPlayersAsync();
@@ -62,7 +62,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         _timelineTimer.Tick += (_, _) =>
         {
             if (!_player.IsConnected) return;
-            if (_viewState is not (ViewStatus.Playing or ViewStatus.Paused)) return;
+            if (!_timelineClock.IsRunning) return;
             PlayheadTime = _timelineOrigin + _timelineClock.Elapsed.TotalSeconds * _timelineSpeed;
         };
         _timelineTimer.Start();
@@ -77,8 +77,9 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     public static MainViewModel Instance { get; private set; } = null!;
 
 
-    public MainDockFactory Factory { get; } = null!;
-    private IRootDock _layout = null!;
+    public  MainDockFactory Factory { get; }
+    private IRootDock       _layout = null!;
+
     public IRootDock Layout
     {
         get => _layout;
@@ -86,15 +87,15 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         {
             if (ReferenceEquals(_layout, value)) return;
             _layout = value;
-            OnPropertyChanged(nameof(Layout));
+            OnPropertyChanged();
         }
     }
-
 
 
     #region 设置
 
     public SettingsService Settings { get; } = new();
+
     private void OnSettingsChanged(object? sender, EventArgs e)
     {
         _ = _player.SetPlayersAsync(Settings.Current.EditSetting.PlayerIps);
@@ -159,12 +160,14 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     [NotifyPropertyChangedFor(nameof(Fumen))]
     [NotifyPropertyChangedFor(nameof(Chart))]
     public partial MaidataFile? Maidata { get; private set; }
+
     partial void OnMaidataChanged(MaidataFile? oldValue, MaidataFile? newValue)
     {
         oldValue?.PropertyChanged -= Maidata_PropertyChanged;
         newValue?.PropertyChanged += Maidata_PropertyChanged;
-        _ = ParseAsync();
+        _                         =  ParseAsync();
     }
+
     private void Maidata_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         // 内部修改刷新
@@ -195,8 +198,6 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             case nameof(MaidataFile.Charts):
                 OnPropertyChanged(nameof(Chart));
                 break;
-            default:
-                break;
         }
 
         // MaidataFile 任意更改都让服务端重新 Parse（谱面 + metadata 一次提交）。
@@ -211,6 +212,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     [NotifyPropertyChangedFor(nameof(Fumen))]
     [NotifyPropertyChangedFor(nameof(Chart))]
     public partial int SelectedDifficulty { get; set; }
+
     partial void OnSelectedDifficultyChanged(int value) => _ = ParseAsync();
 
     // 此处对参数进行展开，语义统一，也方便绑定。
@@ -221,36 +223,43 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         get => Maidata?.Title ?? string.Empty;
         set => Maidata?.Title = value;
     }
+
     public string Artist
     {
         get => Maidata?.Artist ?? string.Empty;
         set => Maidata?.Artist = value;
     }
+
     public string FinalDesigner
     {
         get => Maidata?.Designer ?? string.Empty;
         set => Maidata?.Designer = value;
     }
+
     public float Offset
     {
         get => Maidata?.Offset ?? 0f;
         set => Maidata?.Offset = value;
     }
+
     public string? Level
     {
         get => Maidata?.Levels[SelectedDifficulty];
         set => Maidata?.Levels[SelectedDifficulty] = value;
     }
+
     public string? Designer
     {
         get => Maidata?.Designers[SelectedDifficulty];
         set => Maidata?.Designers[SelectedDifficulty] = value;
     }
+
     public string? Fumen
     {
         get => Maidata?.Fumens[SelectedDifficulty];
         set => Maidata?.Fumens[SelectedDifficulty] = value;
     }
+
     public SimaiChart? Chart
     {
         get => Maidata is { } m ? m.Charts[SelectedDifficulty] : null;
@@ -265,11 +274,11 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     /// <returns>是否扫描到最基本的maidata和track文件</returns>
     private bool UpdatePath(string maidataDir)
     {
-        _maidataDir = maidataDir;
+        _maidataDir  = maidataDir;
         _maidataPath = null;
-        _trackPath = null;
-        _imagePath = null;
-        _videoPath = null;
+        _trackPath   = null;
+        _imagePath   = null;
+        _videoPath   = null;
         // scan
         if (_maidataDir is not null)
         {
@@ -290,27 +299,29 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
             return true;
         }
+
         return false;
     }
+
     private string? _maidataDir;
     private string? _maidataPath;
     private string? _trackPath;
     private string? _imagePath;
     private string? _videoPath;
+
     private void UpdateResources()
     {
         if (File.Exists(_trackPath)) TrackInfo = TrackReader.ReadTrack(_trackPath);
-        if (File.Exists(_imagePath)) Cover = new Bitmap(_imagePath);
+        if (File.Exists(_imagePath)) Cover     = new Bitmap(_imagePath);
     }
 
     [ObservableProperty]
     public partial TrackInfo? TrackInfo { get; private set; }
+
     [ObservableProperty]
     public partial Bitmap? Cover { get; set; }
 
     #endregion
-
-
 
     // ========临时态========
 
@@ -335,39 +346,48 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
     // 播放/UI
 
-    [ObservableProperty] public partial int CaretOffset { get; set; }
-    [ObservableProperty] public partial double CaretTime { get; set; }
-    [ObservableProperty] public partial int CaretCombo { get; set; }
-    [ObservableProperty] public partial double PlayheadTime { get; set; }
+    [ObservableProperty]
+    public partial int CaretOffset { get; set; }
 
-    [ObservableProperty] public partial float PlaybackSpeed { get; set; } = 1f;
-    [ObservableProperty] public partial bool IsFollowCursor { get; set; }
+    [ObservableProperty]
+    public partial double CaretTime { get; set; }
+
+    [ObservableProperty]
+    public partial int CaretCombo { get; set; }
+
+    [ObservableProperty]
+    public partial double PlayheadTime { get; set; }
+
+    [ObservableProperty]
+    public partial float PlaybackSpeed { get; set; } = 1f;
+
+    [ObservableProperty]
+    public partial bool IsFollowCursor { get; set; }
 
 
-    [ObservableProperty] public partial float ZoomLevel { get; set; } = 1f;
-
+    [ObservableProperty]
+    public partial float ZoomLevel { get; set; } = 1f;
 
 
     // 连接
 
     // 变化通知在构造函数 _player.OnConnectedChanged
     // 因为直接绑的 _client.State，没法 Observable
-    public bool IsConnected => _player.IsConnected;
-    public int ActiveConnectionCount => _player.ActiveConnectionCount;
+    public bool IsConnected           => _player.IsConnected;
+    public int  ActiveConnectionCount => _player.ActiveConnectionCount;
 
     private readonly PlayerConnection _player;
-    private ViewStatus _viewState = ViewStatus.Idle;
-    private TaskCompletionSource? _busyTcs; // 等待非Busy状态
 
-    private bool _chartDirty; // 谱面解析被跳过（断连/播放中），待连接且空闲后补推
-    private bool _pushedSetting; // 在任一连接完成之后，有至少一次settings提交
+    private          bool          _chartDirty;    // 谱面解析被跳过（断连/播放中），待连接且空闲后补推
+    private          bool          _pushedSetting; // 在任一连接完成之后，有至少一次settings提交
     private readonly SemaphoreSlim _syncGate = new(1, 1);
-    private double? _lastPlayTime; // 供Stop进行回退
 
     // 播放期间的时间线跟踪：本地 Stopwatch 推算（origin + elapsed × speed），
     private readonly Stopwatch _timelineClock = new();
-    private double _timelineOrigin;
+    private          double    _timelineOrigin;
+
     private float _timelineSpeed = 1f;
+
     // 常驻 UI 时钟：非播放状态的 tick 直接跳过，因此不需要启停控制和跨线程取消那套机器。
     private readonly DispatcherTimer _timelineTimer = new() { Interval = TimeSpan.FromMilliseconds(33) };
 
@@ -377,7 +397,8 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     [RelayCommand]
     public async Task NewFileAsync()
     {
-        var file = await _fileDialog.OpenFileAsync(LocalizationService.Default[LangKeys.Gui_Open], [new FileDialogFilter("Audio Files", ["track.mp3", "track.ogg"])]);
+        var file = await _fileDialog.OpenFileAsync(LocalizationService.Default[LangKeys.Gui_Open],
+                                                   [new FileDialogFilter("Audio Files", ["track.mp3", "track.ogg"])]);
         if (file == null) return;
         var dir = Path.GetDirectoryName(file);
         if (dir == null) return;
@@ -390,10 +411,12 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         UpdateResources();
         await LoadAsync();
     }
+
     [RelayCommand]
     public async Task OpenFileAsync()
     {
-        var file = await _fileDialog.OpenFileAsync(LocalizationService.Default[LangKeys.Gui_Open], [new FileDialogFilter("Majdata Files", ["maidata.txt"])]);
+        var file = await _fileDialog.OpenFileAsync(LocalizationService.Default[LangKeys.Gui_Open],
+                                                   [new FileDialogFilter("Majdata Files", ["maidata.txt"])]);
         if (file == null) return;
         var dir = Path.GetDirectoryName(file);
         if (dir == null) return;
@@ -405,6 +428,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
 
         await LoadAsync();
     }
+
     [RelayCommand]
     public async Task SaveFileAsync()
     {
@@ -414,6 +438,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         var text = MaidataFile.Deparse(Maidata);
         await File.WriteAllTextAsync(_maidataPath, text);
     }
+
     [RelayCommand]
     public async Task ReloadFileAsync()
     {
@@ -426,82 +451,70 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     }
 
 
-
-
     [RelayCommand]
     public void OpenRecover()
     {
-
     }
+
     [RelayCommand]
     public void OpenChartInfo()
     {
         Factory.FloatOrActivateTool<ChartInfoTool>();
     }
+
     [RelayCommand]
     public void OpenSettings()
     {
         Factory.FloatOrActivateTool<SettingsTool>();
     }
+
     [RelayCommand]
     public void OpenBpmTap()
     {
-
     }
+
     [RelayCommand]
     public void OpenShortcut()
     {
-
     }
+
     [RelayCommand]
     public void OpenAbout(AboutPages page)
     {
         switch (page)
         {
-            case AboutPages.Discord: OpenBrowser("https://discord.gg/AcWgZN7j6K"); break;
-            case AboutPages.QQ: OpenBrowser("https://qm.qq.com/q/GAxbFZHP6A"); break;
-            case AboutPages.GitHub: OpenBrowser("https://github.com/LingFeng-bbben/MajdataEdit-Neo"); break;
+            case AboutPages.Discord:      OpenBrowser("https://discord.gg/AcWgZN7j6K"); break;
+            case AboutPages.QQ:           OpenBrowser("https://qm.qq.com/q/GAxbFZHP6A"); break;
+            case AboutPages.GitHub:       OpenBrowser("https://github.com/LingFeng-bbben/MajdataEdit-Neo"); break;
             case AboutPages.GitHub_ViewX: OpenBrowser("https://github.com/re-poem/MajdataViewX"); break;
-            case AboutPages.MajNet: OpenBrowser("https://discord.gg/Majnet"); break;
+            case AboutPages.MajNet:       OpenBrowser("https://discord.gg/Majnet"); break;
         }
+
         static void OpenBrowser(string url) =>
             Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }
 
 
-
-
-
     [RelayCommand]
     public void ShowFindReplace()
     {
-
     }
 
     [RelayCommand]
     public void CheckUpdateAsync()
     {
-
     }
 
     #endregion
 
 
-
     #region Commands - 连接
 
-    public async Task WaitNotBusyAsync()
-    {
-        if (_viewState != ViewStatus.Busy)
-            return;
-
-        _busyTcs ??= new();
-        await _busyTcs.Task;
-    }
     private async Task EnsureSettingAsync()
     {
         if (_pushedSetting) return;
-        await _player.SettingAsync(Settings.Current.ViewSetting, Settings.Current.VolumeSetting);
+        // TODO)) Implement settings
+        // await _player.SettingAsync(Settings.Current.ViewSetting, Settings.Current.VolumeSetting);
         _pushedSetting = true;
     }
 
@@ -512,16 +525,20 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         {
             if (!_player.IsConnected || Maidata is null || _trackPath is null)
                 return;
-            if (_viewState is ViewStatus.Playing or ViewStatus.Paused)
-                return;
 
-            await _player.LoadAsync(_trackPath, _imagePath ?? string.Empty, _videoPath);
+            await _player.BroadcastAsync(new FilesRequest
+            {
+                jacketPath = _imagePath ?? string.Empty,
+                moviePath  = _videoPath ?? string.Empty,
+                trackPath  = _trackPath ?? string.Empty
+            });
+
             await EnsureSettingAsync();
             await ParseAsync();
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[MainViewModel] player sync: {ex.Message}");
+            Debug.WriteLine($"[MainViewModel] player sync: {ex.Message}");
         }
         finally
         {
@@ -533,75 +550,66 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
     {
         if (_trackPath is null) return;
         if (!await _player.ConnectAsync()) return;
-        await _player.LoadAsync(_trackPath, _imagePath ?? string.Empty, _videoPath);
+
+        await _player.BroadcastAsync(new FilesRequest
+        {
+            jacketPath = _imagePath ?? string.Empty,
+            moviePath  = _videoPath ?? string.Empty,
+            trackPath  = _trackPath ?? string.Empty
+        });
         if (_chartDirty) await ParseAsync();
     }
+
     private async Task ParseAsync()
     {
         if (Maidata is null) return;
-        if (!_player.IsConnected || _viewState is ViewStatus.Playing or ViewStatus.Paused)
+        if (!_player.IsConnected)
         {
             _chartDirty = true;
             return;
         }
+
         _chartDirty = false;
         await EnsureSettingAsync();
-        await _player.ParseAsync(
-            Maidata.Fumens[SelectedDifficulty] ?? string.Empty,
-            ExtractClockCount(Maidata),
-            Maidata.Offset,
-            Maidata.Title,
-            Maidata.Artist,
-            Maidata.Levels[SelectedDifficulty] ?? string.Empty,
-            Maidata.Designer,
-            SelectedDifficulty);
+        await _player.BroadcastAsync(new SimaiRequest
+        {
+            content         = Maidata.Fumens[SelectedDifficulty] ?? string.Empty,
+            offset          = Maidata.Offset,
+            title           = Maidata.Title,
+            artist          = Maidata.Artist,
+            designer        = Maidata.Designer,
+            difficultyValue = Maidata.Levels[SelectedDifficulty] ?? string.Empty,
+            difficultyIndex = SelectedDifficulty
+        });
     }
-    public async Task PlayAsync(PlaybackMode mode)
+
+    public async Task PlayAsync(bool record, bool hasIntro)
     {
         if (Maidata is null || _maidataDir is null) return;
         if (!await _player.ConnectAsync()) return;
 
-        // 谱面在断连/播放期间改过的话，这里补推一次解析。
         if (_chartDirty)
             await ParseAsync();
-        _lastPlayTime = PlayheadTime;
 
         await EnsureSettingAsync();
-        await _player.PlayAsync(mode, PlayheadTime, PlaybackSpeed, _maidataDir);
+        await _player.BroadcastAsync(new PlayRequest
+        {
+            position           = PlayheadTime,
+            saveRecordingPath  = record ? _maidataDir : string.Empty,
+            showIntroAnimation = hasIntro
+        });
+
+        _timelineClock.Reset();
+        _timelineOrigin = PlayheadTime;
+        _timelineSpeed  = PlaybackSpeed;
+        _timelineClock.Restart();
     }
+
     public async Task PauseAsync()
     {
-        // 能Pause了这些检查都可以撇了
-        //if (Maidata is null || _maidataDir is null) return;
-        //if (!await _player.ConnectAsync()) return;
-
-        await _player.PauseAsync();
+        await _player.BroadcastAsync(new PauseRequest());
+        _timelineClock.Stop();
     }
-    public async Task ResumeAsync()
-    {
-        // 能Resume了这些检查都可以撇了
-        //if (Maidata is null || _maidataDir is null) return;
-        //if (!await _player.ConnectAsync()) return;
-
-        _lastPlayTime = PlayheadTime;
-
-        await _player.ResumeAsync();
-    }
-    /// <summary>Inspector 的停止键。</summary>
-    [RelayCommand]
-    public async Task StopAsync()
-    {
-        if (!await _player.ConnectAsync()) return;
-        await _player.StopAsync();
-
-        await Task.Delay(33); // 这里等一下Tick结束
-        if (_lastPlayTime.HasValue)
-        {
-            PlayheadTime = _lastPlayTime.Value;
-        }
-        _lastPlayTime = null;
-    }
-
 
     /// <summary>Inspector 的播放/暂停切换键。</summary>
     [RelayCommand]
@@ -610,87 +618,31 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
         if (Maidata is null) return;
         if (!await _player.ConnectAsync()) return;
 
-        switch (_viewState)
-        {
-            case ViewStatus.Playing:
-                await PauseAsync();
-                break;
-            case ViewStatus.Paused:
-                await ResumeAsync();
-                break;
-            case ViewStatus.Busy:
-                await WaitNotBusyAsync();
-                break;
-            default:
-                await PlayAsync(PlaybackMode.Normal);
-                break;
-        }
+        if (_timelineClock.IsRunning)
+            await PlayAsync(false, false);
+        else
+            await PauseAsync();
     }
+
     /// <summary>Inspector 的录制模式按键。</summary>
     [RelayCommand]
     public async Task PlayIncludeOp()
     {
         if (Maidata is null) return;
         if (!IsConnected) return;
-
-        switch (_viewState)
-        {
-            case ViewStatus.Busy:
-                await WaitNotBusyAsync();
-                break;
-            default:
-                await PlayAsync(PlaybackMode.IncludeOp);
-                break;
-        }
+        await PlayAsync(false, true);
     }
+
     /// <summary>Menu 的导出视频按键。</summary>
     [RelayCommand]
     public async Task PlayRecord()
     {
         if (Maidata is null) return;
         if (!IsConnected) return;
-
-        switch (_viewState)
-        {
-            case ViewStatus.Busy:
-                await WaitNotBusyAsync();
-                break;
-            default:
-                await PlayAsync(PlaybackMode.Record);
-                break;
-        }
+        await PlayAsync(true, true);
     }
-
-    //TODO: IncludeOp五秒延迟
 
     //====================播放连接====================
-
-
-
-
-
-    private void OnPlayerStateChanged(ViewStatus oldState, ViewStatus newState)
-    {
-        _viewState = newState;
-        if (newState == ViewStatus.Playing && oldState != ViewStatus.Playing)
-        {
-            // 对齐基准：进入 Playing 前（PlayStarted/PlayResumed）的事件已把镜像刷成本段起点。
-            _timelineClock.Reset();
-            _timelineOrigin = PlayheadTime;
-            _timelineSpeed = PlaybackSpeed;
-            _timelineClock.Restart();
-        }
-        if (newState == ViewStatus.Paused && oldState != ViewStatus.Paused)
-        {
-            _timelineClock.Stop();
-        }
-        // 让当前卡在等Busy的发送
-        if (newState != ViewStatus.Busy)
-        {
-            _busyTcs?.TrySetResult();
-            _busyTcs = null;
-        }
-    }
 
     private static int ExtractClockCount(MaidataFile file)
     {
@@ -699,25 +651,23 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             if (cmd.Key == "clock_count" && int.TryParse(cmd.Value, out var n))
                 return n;
         }
+
         return 0;
     }
 
-
-
     #endregion
-
-
 
 
     #region WIRE UP
 
     private bool _isSlidingPlayhead;
+
     partial void OnCaretOffsetChanged(int value)
     {
         if (Chart is null) return;
-        var timings = Chart.Timings;
+        var timings   = Chart.Timings;
         var caretTime = 0d;
-        var combo = 0;
+        var combo     = 0;
         if (timings.Length == 0) return;
 
         foreach (var t in timings)
@@ -734,7 +684,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             }
         }
 
-        CaretTime = caretTime;
+        CaretTime  = caretTime;
         CaretCombo = combo;
 
         if (InputManager.Instance.IsControl && !_isSlidingPlayhead)
@@ -742,6 +692,7 @@ public partial class MainViewModel : ViewModelBase, IAsyncDisposable
             PlayheadTime = caretTime;
         }
     }
+
     partial void OnPlayheadTimeChanged(double value)
     {
         if (Chart is null) return;

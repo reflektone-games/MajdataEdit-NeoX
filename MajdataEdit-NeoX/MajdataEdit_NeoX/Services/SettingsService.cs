@@ -1,24 +1,20 @@
-using CommunityToolkit.Mvvm.ComponentModel;
 using MajdataEdit_NeoX.Base;
 using MajdataEdit_NeoX.Models.Setting;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
-using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 
 namespace MajdataEdit_NeoX.Services;
 
 public class SettingsService
 {
-    private MajSetting? _currentSettings;
-    private readonly Lock _lock = new();
+    private          MajSetting? _currentSettings;
+    private readonly Lock        _lock = new();
 
 
-    public MajSetting Current => _currentSettings!;
+    public MajSetting          Current => _currentSettings!;
     public event EventHandler? SettingsChanged;
 
     public SettingsService()
@@ -51,13 +47,13 @@ public class SettingsService
             {
                 if (File.Exists(MajEnv.SettingsFile))
                 {
-                    var json = File.ReadAllText(MajEnv.SettingsFile);
-                    var root = JObject.Parse(json);
+                    var json      = File.ReadAllText(MajEnv.SettingsFile);
+                    var root      = JsonNode.Parse(json)?.AsObject() ?? new JsonObject();
                     var playerIps = root["EditSetting"]?["PlayerIps"];
-                    if (playerIps?.Type == JTokenType.String)
-                        root["EditSetting"]!["PlayerIps"] = new JArray(playerIps.ToObject<string>() ?? "127.0.0.1");
+                    if (playerIps?.GetValueKind() == JsonValueKind.String)
+                        root["EditSetting"]!["PlayerIps"] = new JsonArray(playerIps.GetValue<string>());
 
-                    _currentSettings = root.ToObject<MajSetting>();
+                    _currentSettings =   root.Deserialize<MajSetting>();
                     _currentSettings ??= new MajSetting();
                 }
                 else
@@ -92,7 +88,11 @@ public class SettingsService
                     Directory.CreateDirectory(directory);
                 }
 
-                var json = JsonConvert.SerializeObject(_currentSettings, Formatting.Indented);
+                var json = JsonSerializer.Serialize(_currentSettings, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+
                 File.WriteAllText(MajEnv.SettingsFile, json);
             }
             catch (Exception ex)

@@ -1,21 +1,14 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
-using AvaloniaEdit;
 using AvaloniaEdit.CodeCompletion;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.TextMate;
-using CommunityToolkit.Mvvm.ComponentModel;
 using MajdataEdit_NeoX.Base;
-using MajdataEdit_NeoX.Input;
 using MajdataEdit_NeoX.Models.Fumen;
 using PropertyGenerator.Avalonia;
 using System;
-using System.IO;
-using System.Windows.Input;
 using TextMateSharp.Grammars;
 
 namespace MajdataEdit_NeoX.Views;

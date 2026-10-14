@@ -1,8 +1,5 @@
 ﻿using Avalonia.Input;
-using MajdataEdit_NeoX.Types;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace MajdataEdit_NeoX.Input;
 

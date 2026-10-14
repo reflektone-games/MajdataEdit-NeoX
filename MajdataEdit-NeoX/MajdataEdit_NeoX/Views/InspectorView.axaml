@@ -14,7 +14,6 @@
 
     <UserControl.Resources>
         <conv:SecondsToTimeConverter x:Key="SecondsToTime" />
-        <StreamGeometry x:Key="stop">M320-640v320-320Zm-80 400v-480h480v480H240Zm80-80h320v-320H320v320Z</StreamGeometry>
         <StreamGeometry x:Key="play_pause">M200-312v-336l240 168-240 168Zm320-8v-320h80v320h-80Zm160 0v-320h80v320h-80Z</StreamGeometry>
     </UserControl.Resources>
 
@@ -50,38 +49,39 @@
 
         <Label VerticalAlignment="Center" HorizontalAlignment="Center"
                Grid.Column="0" Grid.Row="3" Margin="5 0 5 3"
-               FontSize="12" Content="{ll:Localize Gui_Level}"/>
+               FontSize="12" Content="{ll:Localize Gui_Level}" />
         <TextBox Grid.Column="1" Grid.Row="3" Margin="5 0 5 3"
-                 Text="{Binding #Root.Level}"/>
+                 Text="{Binding #Root.Level}" />
 
         <Label VerticalAlignment="Center" HorizontalAlignment="Center"
                Grid.Column="0" Grid.Row="4" Margin="5 0 5 3"
-               FontSize="12" Content="{ll:Localize Gui_Designer}"/>
+               FontSize="12" Content="{ll:Localize Gui_Designer}" />
         <TextBox Grid.Column="1" Grid.Row="4" Margin="5 0 5 3"
-                 Text="{Binding #Root.Designer}"/>
+                 Text="{Binding #Root.Designer}" />
 
         <Label VerticalAlignment="Center" HorizontalAlignment="Center"
                Grid.Column="0" Grid.Row="5" Margin="5 0 5 3"
-               FontSize="12" Content="{ll:Localize Gui_Offset}"/>
+               FontSize="12" Content="{ll:Localize Gui_Offset}" />
         <NumericUpDown Grid.Column="1" Grid.Row="5" Margin="5 0 5 3"
-                       Value="{Binding #Root.Offset}" ShowButtonSpinner="False"/>
+                       Value="{Binding #Root.Offset}" ShowButtonSpinner="False" />
 
         <Label VerticalAlignment="Center" HorizontalAlignment="Center"
                Grid.Column="0" Grid.Row="6" Margin="4 0 5 3"
-               FontSize="12" Content="{ll:Localize Gui_PlaybackSpeed}"/>
+               FontSize="12" Content="{ll:Localize Gui_PlaybackSpeed}" />
         <NumericUpDown Grid.Column="1" Grid.Row="6" Margin="5 0 5 3"
                        Value="{Binding #Root.PlaybackSpeed}"
                        Minimum="0.1" Increment="0.1"
                        FormatString="0.##"
-                       ShowButtonSpinner="False"/>
+                       ShowButtonSpinner="False" />
 
 
         <CheckBox Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="2"
                   IsChecked="{Binding #Root.IsFollowCursor}" Content="{ll:Localize Gui_FollowCursor}"
-                  Margin="0 4 0 0" HorizontalAlignment="Center"/>
+                  Margin="0 4 0 0" HorizontalAlignment="Center" />
         <StackPanel Grid.Column="0" Grid.Row="8"
                     VerticalAlignment="Center" HorizontalAlignment="Center">
-            <CheckBox IsChecked="{Binding #Root.IsConnected}" IsEnabled="False" Margin="15 4 0 0" HorizontalAlignment="Center"/>
+            <CheckBox IsChecked="{Binding #Root.IsConnected}" IsEnabled="False" Margin="15 4 0 0"
+                      HorizontalAlignment="Center" />
             <TextBlock FontSize="8" Margin="5 -7 0 0" HorizontalAlignment="Center">
                 <Run Text="Conn [" />
                 <Run Text="{Binding #Root.ActiveConnectionCount}" />
@@ -95,11 +95,8 @@
         <StackPanel Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="9"
                     Orientation="Horizontal" Spacing="5" Margin="0 6 0 0"
                     HorizontalAlignment="Center">
-            <Button Height="50" Width="50" Command="{Binding StopAsync}">
-                <PathIcon Width="13" Data="{StaticResource stop}"/>
-            </Button>
             <Button Height="50" Width="50" Command="{Binding PlayPause}">
-                <PathIcon Data="{StaticResource play_pause}"/>
+                <PathIcon Data="{StaticResource play_pause}" />
             </Button>
         </StackPanel>
 

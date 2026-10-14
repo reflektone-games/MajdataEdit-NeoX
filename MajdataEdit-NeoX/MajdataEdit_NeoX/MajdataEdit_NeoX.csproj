@@ -36,9 +36,9 @@
 		<PackageReference Include="Dock.Model.Mvvm" />
 		<PackageReference Include="FFmpeg.AutoGen" />
 		<PackageReference Include="FluentAvaloniaUI" />
-		<PackageReference Include="MajProtocol" />
 		<PackageReference Include="Microsoft.Data.Sqlite" />
 		<PackageReference Include="NuGet.Versioning" />
+		<PackageReference Include="Reflektone.MajProtocol.Standard" />
 		<PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
 		<PackageReference Include="PropertyGenerator.Avalonia" />
 		<PackageReference Include="SkiaSharp" />

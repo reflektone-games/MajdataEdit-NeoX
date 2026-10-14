@@ -1,9 +1,8 @@
 ﻿using MajdataEdit_NeoX.Lang;
-using MajdataEdit_NeoX.Types;
-using Newtonsoft.Json;
 using PropertyModels.ComponentModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace MajdataEdit_NeoX.Models.Setting;
 
@@ -13,86 +12,110 @@ public partial class MajViewSetting
 {
     [DisplayName(LangKeys.Set_TapSpeed)]
     [Range(0, int.MaxValue)]
-    [JsonProperty("tapSpeed")]
+    [JsonPropertyName("tapSpeed")]
     public float TapSpeed { get; set; } = 7.5f;
 
     [DisplayName(LangKeys.Set_TouchSpeed)]
     [Range(0, int.MaxValue)]
-    [JsonProperty("touchSpeed")]
+    [JsonPropertyName("touchSpeed")]
     public float TouchSpeed { get; set; } = 7.5f;
 
     [DisplayName(LangKeys.Set_SmoothSlideAnime)]
-    [JsonProperty("smoothSlideAnime")]
+    [JsonPropertyName("smoothSlideAnime")]
     public bool SmoothSlideAnime { get; set; } = true;
 
     [DisplayName(LangKeys.Set_BackgroundDim)]
     [Range(0, 1)]
-    [JsonProperty("backgroundDim")]
+    [JsonPropertyName("backgroundDim")]
     public float BackgroundDim { get; set; } = 0.7f;
 
     [DisplayName(LangKeys.Set_BackgroundOutsideDim)]
     [Range(0, 1)]
-    [JsonProperty("backgroundOutsideDim")]
+    [JsonPropertyName("backgroundOutsideDim")]
     public float BackgroundOutsideDim { get; set; } = 0.3f;
 
     [DisplayName(LangKeys.Set_ComboStatusType)]
-    [JsonProperty("comboStatusType")]
+    [JsonPropertyName("comboStatusType")]
     public BgInfoDisplay ComboStatusType { get; set; } = BgInfoDisplay.Combo;
 
 
     [DisplayName(LangKeys.Set_AutoMode)]
-    [JsonProperty("autoMode")]
+    [JsonPropertyName("autoMode")]
     public AutoPlayMode AutoMode { get; set; } = AutoPlayMode.Enable;
 
 
     [DisplayName(LangKeys.Set_ShowHand)]
-    [JsonProperty("showHand")]
+    [JsonPropertyName("showHand")]
     public bool ShowHand { get; set; } = false;
 
 
     [DisplayName(LangKeys.Set_OutputFps)]
     [Range(1, int.MaxValue)]
-    [JsonProperty("outputFps")]
+    [JsonPropertyName("outputFps")]
     public int OutputFps { get; set; } = 60;
 
     [DisplayName(LangKeys.Set_ExportQuality)]
-    [JsonProperty("exportQuality")]
+    [JsonPropertyName("exportQuality")]
     public ExportQuality ExportQuality { get; set; } = ExportQuality.High;
 
     [DisplayName(LangKeys.Set_ResizeBg)]
-    [JsonProperty("resizeBg")]
+    [JsonPropertyName("resizeBg")]
     public bool ResizeBg { get; set; } = false;
 
     [DisplayName(LangKeys.Set_UIType)]
-    [JsonProperty("uiType")]
+    [JsonPropertyName("uiType")]
     public UIType UIType { get; set; } = UIType.Legacy;
 
     [DisplayName(LangKeys.Set_GlobalAudioOffset)]
-    [JsonProperty("globalAudioOffset")]
+    [JsonPropertyName("globalAudioOffset")]
     public double GlobalAudioOffset { get; set; } = 0;
 
     [DisplayName(LangKeys.Set_LegacySlideLayer)]
-    [JsonProperty("legacySlideLayer")]
+    [JsonPropertyName("legacySlideLayer")]
     public bool LegacySlideLayer { get; set; } = false;
+
     [DisplayName(LangKeys.Set_MineAutoSlide)]
-    [JsonProperty("mineAutoSlide")]
+    [JsonPropertyName("mineAutoSlide")]
     public bool MineAutoSlide { get; set; } = true;
 }
 
 public enum BgInfoDisplay
 {
-    [EnumDisplayName("None")] None,
-    [EnumDisplayName("Combo")] Combo,
-    [EnumDisplayName("Achievement - (Deluxe, 101)")] Achievement_101,
-    [EnumDisplayName("Achievement - (Deluxe, 100)")] Achievement_100,
-    [EnumDisplayName("Achievement + (Deluxe)")] Achievement,
-    [EnumDisplayName("Achievement + (Classic)")] AchievementClassical,
-    [EnumDisplayName("Achievement - (Classic, 100)")] AchievementClassical_100,
-    [EnumDisplayName("Deluxe Score +")] DXScore,
-    [EnumDisplayName("Deluxe Score -")] DXScore_Dec,
-    [EnumDisplayName("S Border")] S_Border,
-    [EnumDisplayName("SS Border")] SS_Border,
-    [EnumDisplayName("SSS Border")] SSS_Border,
+    [EnumDisplayName("None")]
+    None,
+
+    [EnumDisplayName("Combo")]
+    Combo,
+
+    [EnumDisplayName("Achievement - (Deluxe, 101)")]
+    Achievement_101,
+
+    [EnumDisplayName("Achievement - (Deluxe, 100)")]
+    Achievement_100,
+
+    [EnumDisplayName("Achievement + (Deluxe)")]
+    Achievement,
+
+    [EnumDisplayName("Achievement + (Classic)")]
+    AchievementClassical,
+
+    [EnumDisplayName("Achievement - (Classic, 100)")]
+    AchievementClassical_100,
+
+    [EnumDisplayName("Deluxe Score +")]
+    DXScore,
+
+    [EnumDisplayName("Deluxe Score -")]
+    DXScore_Dec,
+
+    [EnumDisplayName("S Border")]
+    S_Border,
+
+    [EnumDisplayName("SS Border")]
+    SS_Border,
+
+    [EnumDisplayName("SSS Border")]
+    SSS_Border,
 }
 
 public enum UIType
@@ -103,11 +126,12 @@ public enum UIType
 
 public enum ExportQuality
 {
-    Low = 0,
+    Low    = 0,
     Medium = 1,
-    High = 2,
-    Ultra = 3,
+    High   = 2,
+    Ultra  = 3,
 }
+
 public enum AutoPlayMode
 {
     Enable,

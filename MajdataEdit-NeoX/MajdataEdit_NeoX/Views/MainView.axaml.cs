@@ -1,6 +1,4 @@
-﻿
-using Avalonia;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 
 namespace MajdataEdit_NeoX.Views;
 

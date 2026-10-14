@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Input;
-using MajdataEdit_NeoX.Input;
-using MajdataEdit_NeoX.ViewModels;
 
 namespace MajdataEdit_NeoX.Views;
 
